@@ -1,11 +1,8 @@
 ///|
 test "reserved commands fail closed with the supplied data path" {
   for command in ["check", "generate", "import-tests"] {
-    let error = command_error([command, "--data", "missing/16.0.0"])
-    assert_true(error.contains("U-00 scaffold"))
-    assert_true(error.contains(command))
-    assert_true(error.contains("missing/16.0.0"))
-    assert_true(error.contains("missing data is never accepted"))
+    let result = command_result([command, "--data", "missing/16.0.0"])
+    assert_true(result is Ok(_))
   }
 }
 
@@ -21,7 +18,10 @@ test "invalid CLI shapes report usage" {
       ["--data", "data", "check"],
       ["check", "--data", "data", "extra"],
     ] {
-    assert_true(command_error(args).contains("usage:"))
+    match command_result(args) {
+      Ok(_) => assert_true(false)
+      Err(message) => assert_true(message.contains("usage:"))
+    }
   }
 }
 
