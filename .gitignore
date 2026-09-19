@@ -1,0 +1,28 @@
+# MoonBit build and generated local artifacts
+_build/
+target/
+**/target/
+*.mbt.json
+*.mbti
+
+# Local spike/build output
+.unicode-spike-*/
+spikes/
+docs/
+
+# Repository-local agent instructions
+AGENTS.md
+
+# Nested experiment repositories
+**/.git/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+.DS_Store
+
+# Rust/Cargo local outputs in interoperability spikes
+spikes/**/target/

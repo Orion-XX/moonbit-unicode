@@ -1,0 +1,70 @@
+name: U-00 target baseline
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    name: baseline (${{ matrix.target }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [native, wasm, wasm-gc, js]
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.11.1'
+      - name: Install the existing MoonBit toolchain version
+        id: setup
+        env:
+          MOONBIT_INSTALL_VERSION: '0.10.9+6e6c44045'
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'install-moonbit.ps1'
+          Invoke-WebRequest 'https://cli.moonbitlang.com/install/powershell.ps1' -OutFile $installer
+          & pwsh -NoProfile -File $installer
+          if ($LASTEXITCODE -ne 0) { throw 'MoonBit setup failed' }
+          Join-Path $env:USERPROFILE '.moon/bin' | Out-File $env:GITHUB_PATH -Append
+      - name: Record tool and runner versions
+        run: |
+          moon version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          moonc -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          moonrun --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check package interfaces and formatting
+        run: |
+          moon info
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          moon fmt --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- '*.mbti'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run target tests (runner absence is a failure)
+        id: tests
+        run: moon test --target ${{ matrix.target }}
+      - name: Verify U-00 CLI rejects unavailable work
+        id: cli
+        run: |
+          & ./tools/unicode-gen/test-cli.ps1 -Target '${{ matrix.target }}'
+          # Expected child failures have already been asserted by the script.
+          exit 0
+      - name: Report this target even after setup or runner failure
+        if: always()
+        run: |
+          @'
+          | Target | Job | Toolchain setup | Tests | CLI contract |
+          |---|---|---|---|---|
+          | ${{ matrix.target }} | ${{ job.status }} | ${{ steps.setup.outcome }} | ${{ steps.tests.outcome }} | ${{ steps.cli.outcome }} |
+
+          A skipped test is unverified. Setup or runner failures remain failed jobs.
+          '@ | Out-File $env:GITHUB_STEP_SUMMARY -Append

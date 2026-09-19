@@ -1,0 +1,18 @@
+{
+  "unicode_version": "16.0.0",
+  "license": {
+    "file": "LICENSE.txt",
+    "url": "https://www.unicode.org/license.txt",
+    "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+    "copyright": "Unicode, Inc. Unicode Character Database; see LICENSE.txt."
+  },
+  "files": [
+    {"path":"UnicodeData.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/UnicodeData.txt","sha256":"ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f"},
+    {"path":"CompositionExclusions.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/CompositionExclusions.txt","sha256":"89e83cf9cc8bef6c1f8bf77e42cf6f0341dfa42e66261f4dbe9b492e7a23c8ee"},
+    {"path":"DerivedNormalizationProps.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/DerivedNormalizationProps.txt","sha256":"4d4c03892dea9146d674b686e495df2d55a28d071ac474041d73518f887abddc"},
+    {"path":"GraphemeBreakProperty.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/auxiliary/GraphemeBreakProperty.txt","sha256":"c29360bd6f7132811d701d29069541e827eb44bfc4c8fbde8c370d6982689dc1"},
+    {"path":"emoji-data.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/emoji/emoji-data.txt","sha256":"f1365a5173eee18e1f98b240cdc492e84a25f1ce7e0c9d1094eb29c41a22696a"},
+    {"path":"NormalizationTest.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/NormalizationTest.txt","sha256":"d811971453e7075e1ad56fb1b301eece5aa80757b81f6156e74a1bfb3ae5ceb1"},
+    {"path":"auxiliary/GraphemeBreakTest.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/auxiliary/GraphemeBreakTest.txt","sha256":"ee2b9354d270ac061b29f09662cafea06341d77e704b8cc6bd72aaeeda363cb5"}
+  ]
+}
