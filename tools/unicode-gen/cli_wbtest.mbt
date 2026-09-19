@@ -1,8 +1,10 @@
 ///|
-test "reserved commands fail closed with the supplied data path" {
+test "reserved commands accept only the pinned data path" {
   for command in ["check", "generate", "import-tests"] {
-    let result = command_result([command, "--data", "missing/16.0.0"])
+    let result = command_result([command, "--data", "unicode/data/16.0.0"])
     assert_true(result is Ok(_))
+    let missing = command_result([command, "--data", "missing/16.0.0"])
+    assert_true(missing is Err(_))
   }
 }
 
