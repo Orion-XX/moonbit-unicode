@@ -7,11 +7,6 @@ target/
 
 # Local spike/build output
 .unicode-spike-*/
-spikes/
-docs/
-
-# Repository-local agent instructions
-AGENTS.md
 
 # Nested experiment repositories
 **/.git/
