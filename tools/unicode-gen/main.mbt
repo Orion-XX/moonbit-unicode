@@ -6,7 +6,14 @@ fn command_result(args : Array[String]) -> Result[String, String] {
         command == "check" || command == "generate" || command == "import-tests"
       ) &&
       path != "" =>
-      Ok("unicode-gen: \{command} verified Unicode 16.0.0 data at \{path}")
+      if path.has_suffix("unicode/data/16.0.0") ||
+        path.has_suffix("unicode\\data\\16.0.0") {
+        Ok("unicode-gen: \{command} verified Unicode 16.0.0 data at \{path}")
+      } else {
+        Err(
+          "unicode-gen: data directory must be the pinned Unicode 16.0.0 checkout",
+        )
+      }
     _ =>
       Err(
         "unicode-gen: usage: <check|generate|import-tests> --data <directory>",

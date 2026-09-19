@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "unicode" / "data" / "16.0.0"
-OUT = ROOT / "src" / "internal" / "tables" / "normalization_data.mbt"
+DEFAULT_DATA = ROOT / "unicode" / "data" / "16.0.0"
+DEFAULT_OUT = ROOT / "src" / "internal" / "tables" / "normalization_data.mbt"
 
 
 def digest(path: Path) -> str:
@@ -70,13 +70,13 @@ def array(values):
     return "[" + ", ".join(str(v) for v in values) + "]"
 
 
-def emit(records):
+def emit(records, data_dir: Path):
     canonical, compatibility, ccc, excluded = records
     lines = [
         "// GENERATED FILE - DO NOT EDIT.",
         "// Unicode version: 16.0.0",
-        f"// Input: UnicodeData.txt SHA-256: {digest(DATA / 'UnicodeData.txt')}",
-        f"// Input: CompositionExclusions.txt SHA-256: {digest(DATA / 'CompositionExclusions.txt')}",
+        f"// Input: UnicodeData.txt SHA-256: {digest(data_dir / 'UnicodeData.txt')}",
+        f"// Input: CompositionExclusions.txt SHA-256: {digest(data_dir / 'CompositionExclusions.txt')}",
         "// Generator: tools/unicode-gen/generate_tables.py",
         "// Command: python tools/unicode-gen/generate_tables.py",
         "",
@@ -114,16 +114,36 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--data",
+        type=Path,
+        default=DEFAULT_DATA,
+        help="Unicode 16.0.0 data directory",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OUT,
+        help="generated MoonBit source path",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="verify the committed table is identical without rewriting it",
     )
     args = parser.parse_args()
-    generated = emit((*unicode_data(DATA / "UnicodeData.txt"), exclusions(DATA / "CompositionExclusions.txt")))
+    data_dir = args.data.resolve()
+    output = args.output.resolve()
+    generated = emit(
+        (
+            *unicode_data(data_dir / "UnicodeData.txt"),
+            exclusions(data_dir / "CompositionExclusions.txt"),
+        ),
+        data_dir,
+    )
     if args.check:
-        current = OUT.read_text(encoding="ascii")
+        current = output.read_text(encoding="ascii")
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="ascii", newline="\n", suffix=".mbt", dir=OUT.parent, delete=False
+            mode="w", encoding="ascii", newline="\n", suffix=".mbt", dir=output.parent, delete=False
         ) as temporary:
             temporary.write(generated)
             temporary_path = Path(temporary.name)
@@ -133,14 +153,15 @@ def main() -> None:
         finally:
             temporary_path.unlink(missing_ok=True)
         if current != formatted:
-            raise SystemExit(f"generated output differs: {OUT}")
-        print(f"deterministic output verified: {OUT}")
+            raise SystemExit(f"generated output differs: {output}")
+        print(f"deterministic output verified: {output}")
     else:
-        OUT.write_text(generated, encoding="ascii", newline="\n")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(generated, encoding="ascii", newline="\n")
         # Keep checked-in generated source in the repository's canonical
         # MoonBit format so `--check` is a byte-for-byte comparison.
         subprocess.run(["moon", "fmt"], cwd=ROOT, check=True)
-        print(f"generated: {OUT}")
+        print(f"generated: {output}")
 
 
 if __name__ == "__main__":
