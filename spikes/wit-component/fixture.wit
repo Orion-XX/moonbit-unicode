@@ -1,0 +1,11 @@
+package example:catalog;
+
+interface catalog {
+  record item { id: u32, name: string }
+  variant lookup-error { missing, denied(string) }
+  resource session;
+  get: func(id: u32) -> result<item, lookup-error>;
+  list-items: func(filter: option<string>) -> list<item>;
+  open: func() -> session;
+  close: func(s: session);
+}
