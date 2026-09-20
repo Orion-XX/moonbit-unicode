@@ -1,0 +1,6 @@
+import {
+  "Atman-Angle/moonbit-unicode/src/normalization",
+  "Atman-Angle/moonbit-unicode/src/grapheme",
+}
+
+pkgtype(kind: "executable")

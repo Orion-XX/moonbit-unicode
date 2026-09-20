@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,6 +82,31 @@ def emit(data_dir: Path) -> str:
     return "\n".join(lines)
 
 
+def formatted_moon(source: str, output: Path) -> str:
+    """Return the generator output in the canonical MoonBit source format."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="ascii",
+        newline="\n",
+        suffix=".mbt",
+        prefix="grapheme_cases_",
+        dir=output.parent,
+        delete=False,
+    ) as temporary:
+        temporary.write(source)
+        temporary_path = Path(temporary.name)
+    try:
+        subprocess.run(
+            ["moon", "fmt", str(temporary_path)],
+            cwd=ROOT,
+            check=True,
+        )
+        return temporary_path.read_text(encoding="ascii")
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=Path, default=DEFAULT_DATA)
@@ -89,8 +116,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.import_tests == args.check:
         parser.error("choose exactly one of --import-tests or --check")
-    generated = emit(args.data.resolve())
     output = args.output.resolve()
+    generated = formatted_moon(emit(args.data.resolve()), output)
     if args.check:
         if not output.exists() or output.read_text(encoding="ascii") != generated:
             raise SystemExit(f"generated output differs: {output}")
