@@ -17,6 +17,19 @@ test "required grapheme rules" {
 }
 
 ///|
+test "Indic conjunct GB9c" {
+  assert_eq(grapheme_boundaries("\u{915}\u{94D}\u{924}").to_array(), [(0, 9)])
+  assert_eq(grapheme_boundaries("\u{915}\u{94D}\u{94D}\u{924}").to_array(), [
+    (0, 12),
+  ])
+  assert_eq(grapheme_boundaries("\u{915}\u{94D}\u{200D}\u{924}").to_array(), [
+    (0, 12),
+  ])
+  assert_eq(grapheme_boundaries("\u{915}\u{924}").to_array(), [(0, 3), (3, 6)])
+  assert_eq(grapheme_boundaries("\u{915}\u{94D}a").to_array(), [(0, 6), (6, 7)])
+}
+
+///|
 test "controls always form separate clusters" {
   assert_eq(grapheme_boundaries("a\n\u{300}b").to_array(), [
     (0, 1),

@@ -12,6 +12,7 @@
     {"path":"DerivedNormalizationProps.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/DerivedNormalizationProps.txt","sha256":"4d4c03892dea9146d674b686e495df2d55a28d071ac474041d73518f887abddc"},
     {"path":"GraphemeBreakProperty.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/auxiliary/GraphemeBreakProperty.txt","sha256":"c29360bd6f7132811d701d29069541e827eb44bfc4c8fbde8c370d6982689dc1"},
     {"path":"emoji-data.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/emoji/emoji-data.txt","sha256":"f1365a5173eee18e1f98b240cdc492e84a25f1ce7e0c9d1094eb29c41a22696a"},
+    {"path":"DerivedCoreProperties.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt","sha256":"39d35161f2954497f69e08bdb9e701493f476a3d30222de20028feda36c1dabd"},
     {"path":"NormalizationTest.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/NormalizationTest.txt","sha256":"d811971453e7075e1ad56fb1b301eece5aa80757b81f6156e74a1bfb3ae5ceb1"},
     {"path":"auxiliary/GraphemeBreakTest.txt","url":"https://www.unicode.org/Public/16.0.0/ucd/auxiliary/GraphemeBreakTest.txt","sha256":"ee2b9354d270ac061b29f09662cafea06341d77e704b8cc6bd72aaeeda363cb5"}
   ]
