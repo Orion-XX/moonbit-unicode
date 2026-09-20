@@ -39,6 +39,26 @@ fn find_composition(starter : Int, combining : Int) -> Int? {
 }
 
 ///|
+fn find_grapheme_break_property(cp : Int) -> GraphemeBreakProperty {
+  for entry in grapheme_break_ranges {
+    if cp >= entry.start && cp <= entry.end {
+      return entry.property
+    }
+  }
+  Other
+}
+
+///|
+fn is_extended_pictographic(cp : Int) -> Bool {
+  for entry in extended_pictographic_ranges {
+    if cp >= entry.start && cp <= entry.end {
+      return true
+    }
+  }
+  false
+}
+
+///|
 test "canonical and compatibility mappings remain distinct" {
   match find_canonical(0x00C0) {
     Some(entry) => assert_eq(entry.mapping, [0x41, 0x300])
@@ -74,4 +94,29 @@ test "composition exclusions are retained" {
   // U+0958 has a canonical two-scalar mapping but is excluded from NFC
   // composition; the pair must therefore not be emitted.
   assert_true(find_composition(0x0915, 0x093C) is None)
+}
+
+///|
+test "generated grapheme ranges cover every UAX 29 state property" {
+  assert_true(find_grapheme_break_property(0x0000) is Control)
+  assert_true(find_grapheme_break_property(0x000D) is CR)
+  assert_true(find_grapheme_break_property(0x000A) is LF)
+  assert_true(find_grapheme_break_property(0x0300) is Extend)
+  assert_true(find_grapheme_break_property(0x200D) is ZWJ)
+  assert_true(find_grapheme_break_property(0x0600) is Prepend)
+  assert_true(find_grapheme_break_property(0x0903) is SpacingMark)
+  assert_true(find_grapheme_break_property(0x1100) is L)
+  assert_true(find_grapheme_break_property(0x1160) is V)
+  assert_true(find_grapheme_break_property(0x11A8) is T)
+  assert_true(find_grapheme_break_property(0xAC00) is LV)
+  assert_true(find_grapheme_break_property(0xAC01) is LVT)
+  assert_true(find_grapheme_break_property(0x1F1E6) is RegionalIndicator)
+  assert_true(find_grapheme_break_property(0x0041) is Other)
+}
+
+///|
+test "generated Extended_Pictographic ranges remain separate from grapheme breaks" {
+  assert_true(is_extended_pictographic(0x1F469))
+  assert_true(is_extended_pictographic(0x2764))
+  assert_false(is_extended_pictographic(0x0041))
 }
