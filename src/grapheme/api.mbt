@@ -25,9 +25,11 @@ pub fn grapheme_boundaries(input : String) -> Iter[(Int, Int)] {
   let mut ri_run = if previous is RegionalIndicator { 1 } else { 0 }
   let mut ep_extend_run = is_extended_pictographic(scalars[0].cp)
   let mut zwj_after_ep = false
+  let mut incb_state = incb_state_after(find_incb_property(scalars[0].cp), None)
   for index = 1; index < scalars.length(); index = index + 1 {
     let current = scalars[index]
     let current_property = current.property()
+    let current_incb = find_incb_property(current.cp)
     if grapheme_break_before(
         scalars[index - 1].cp,
         previous,
@@ -35,6 +37,8 @@ pub fn grapheme_boundaries(input : String) -> Iter[(Int, Int)] {
         current_property,
         ri_run,
         zwj_after_ep,
+        incb_state,
+        current_incb,
       ) {
       boundaries.push((cluster_start, current.start))
       cluster_start = current.start
@@ -52,6 +56,7 @@ pub fn grapheme_boundaries(input : String) -> Iter[(Int, Int)] {
     } else {
       false
     }
+    incb_state = incb_state_after(current_incb, incb_state)
     previous = current_property
   }
   boundaries.push((cluster_start, scalars[scalars.length() - 1].end))
@@ -91,6 +96,8 @@ fn grapheme_break_before(
   current : GraphemeProperty,
   ri_run : Int,
   zwj_after_ep : Bool,
+  incb_state : InCBState,
+  current_incb : InCBProperty,
 ) -> Bool {
   // GB3.
   if previous is CR && current is LF {
@@ -119,6 +126,10 @@ fn grapheme_break_before(
   if previous is Prepend {
     return false
   }
+  // GB9c: Indic_Conjunct_Break=Consonant Extend* Linker Extend* Consonant.
+  if incb_state is Linker && current_incb is Consonant {
+    return false
+  }
   // GB11.
   if previous is ZWJ && zwj_after_ep && is_extended_pictographic(current_cp) {
     return false
@@ -130,6 +141,51 @@ fn grapheme_break_before(
   // GB999.
   ignore(previous_cp)
   true
+}
+
+///|
+priv enum InCBState {
+  None
+  Consonant
+  Linker
+}
+
+///|
+priv enum InCBProperty {
+  None
+  Consonant
+  Extend
+  Linker
+}
+
+///|
+fn find_incb_property(cp : Int) -> InCBProperty {
+  for entry in @tables.indic_conjunct_break_ranges {
+    if cp >= entry.start && cp <= entry.end {
+      return match entry.property {
+        @tables.IndicConjunctBreakProperty::None => None
+        @tables.IndicConjunctBreakProperty::Consonant => Consonant
+        @tables.IndicConjunctBreakProperty::Extend => Extend
+        @tables.IndicConjunctBreakProperty::Linker => Linker
+      }
+    }
+  }
+  None
+}
+
+///|
+fn incb_state_after(property : InCBProperty, previous : InCBState) -> InCBState {
+  match property {
+    Consonant => Consonant
+    Extend => previous
+    Linker =>
+      match previous {
+        Consonant => Linker
+        Linker => Linker
+        _ => None
+      }
+    None => None
+  }
 }
 
 ///|

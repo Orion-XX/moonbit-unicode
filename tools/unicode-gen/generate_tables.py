@@ -48,6 +48,8 @@ GRAPHEME_VARIANTS = {
     "ZWJ": "ZWJ",
 }
 
+INCB_PROPERTIES = ("Consonant", "Extend", "Linker")
+
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -112,9 +114,12 @@ def property_ranges(path: Path, expected: set[str] | None = None):
         if not line:
             continue
         fields = [field.strip() for field in line.split(";")]
-        if len(fields) != 2:
+        if len(fields) == 2:
+            value = fields[1]
+        elif len(fields) == 3 and fields[1] == "InCB":
+            value = fields[2]
+        else:
             raise ValueError(f"{path.name}:{line_no}: expected range ; property")
-        value = fields[1]
         if expected is not None and value not in expected:
             continue
         pieces = fields[0].split("..")
@@ -197,15 +202,20 @@ def emit_grapheme(data_dir: Path):
     extended = property_ranges(emoji_input, {"Extended_Pictographic"})
     compact_grapheme = merge_property_ranges(grapheme)
     compact_extended = merge_property_ranges(extended)
+    incb_input = data_dir / "DerivedCoreProperties.txt"
+    incb = property_ranges(incb_input, set(INCB_PROPERTIES))
+    compact_incb = merge_property_ranges(incb)
     lines = [
         "// GENERATED FILE - DO NOT EDIT.",
         "// Unicode version: 16.0.0",
         f"// Input: GraphemeBreakProperty.txt SHA-256: {digest(grapheme_input)}",
         f"// Input: emoji-data.txt SHA-256: {digest(emoji_input)}",
+        f"// Input: DerivedCoreProperties.txt SHA-256: {digest(incb_input)}",
         "// Generator: tools/unicode-gen/generate_tables.py",
         "// Command: python tools/unicode-gen/generate_tables.py grapheme --data unicode/data/16.0.0",
         f"// Grapheme property ranges: {len(grapheme)} source, {len(compact_grapheme)} encoded.",
         f"// Extended_Pictographic ranges: {len(extended)} source, {len(compact_extended)} encoded.",
+        f"// Indic_Conjunct_Break ranges: {len(incb)} source, {len(compact_incb)} encoded.",
         "",
         "///|",
         "pub enum GraphemeBreakProperty {",
@@ -242,8 +252,36 @@ def emit_grapheme(data_dir: Path):
         "pub let extended_pictographic_ranges : Array[ExtendedPictographicRange] = [",
     ]
     lines += [f"  {{ start: {lo}, end: {hi} }}," for lo, hi, _ in compact_extended]
+    lines += [
+        "]",
+        "",
+        "///|",
+        "pub enum IndicConjunctBreakProperty {",
+        "  None",
+        "  Consonant",
+        "  Extend",
+        "  Linker",
+        "}",
+        "",
+        "///|",
+        "pub struct IndicConjunctBreakRange {",
+        "  start : Int",
+        "  end : Int",
+        "  property : IndicConjunctBreakProperty",
+        "}",
+        "",
+        "///|",
+        "pub let indic_conjunct_break_ranges : Array[IndicConjunctBreakRange] = [",
+    ]
+    lines += [
+        f"  {{ start: {lo}, end: {hi}, property: {value} }},"
+        for lo, hi, value in compact_incb
+    ]
     lines += ["]", ""]
-    return "\n".join(lines), (len(grapheme), len(compact_grapheme), len(extended), len(compact_extended))
+    return "\n".join(lines), (
+        len(grapheme), len(compact_grapheme), len(extended), len(compact_extended),
+        len(incb), len(compact_incb),
+    )
 
 
 def render_checked(output: Path, generated: str, check: bool):
@@ -302,7 +340,8 @@ def main() -> None:
         print(
             "grapheme ranges: "
             f"{counts[0]} source/{counts[1]} encoded; "
-            f"Extended_Pictographic: {counts[2]} source/{counts[3]} encoded"
+            f"Extended_Pictographic: {counts[2]} source/{counts[3]} encoded; "
+            f"Indic_Conjunct_Break: {counts[4]} source/{counts[5]} encoded"
         )
 
 
