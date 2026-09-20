@@ -1,4 +1,4 @@
-// U-04..U-07: canonical normalization; no public API in U-00.
+// U-04..U-07: canonical normalization and public NFC/NFD APIs.
 import {
   "Atman-Angle/moonbit-unicode/src/internal/tables",
 }
